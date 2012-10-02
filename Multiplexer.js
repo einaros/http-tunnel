@@ -167,7 +167,7 @@ Multiplexer.prototype._sendControlPacket = function(control, ref) {
   var data = new Buffer(4);
   data.writeUInt16BE(0x8000 | ref, 0); // control indicator + ref
   data.writeUInt8(control.code, 2);  // code
-  data.writeUInt8(0, 3); // length
+  data.writeUInt8(0, 3); // length, currently 0, but control packets *can* hold 256 bytes of data
   this.socket.write(data);
 }
 
@@ -182,13 +182,13 @@ Multiplexer.prototype._sendThroughSession = function(ref, data, encoding, callba
   var result = true;
   var offset = 0;
   while (true) {
-    var pieceLength = Math.min(32767, data.length - offset);
+    var pieceLength = Math.min(65535, data.length - offset);
     var outgoingData = new Buffer(4 + pieceLength);
     data.copy(outgoingData, 4, offset, offset + pieceLength);
     offset += pieceLength;
     outgoingData.writeUInt16BE(ref, 0);
     outgoingData.writeUInt16BE(pieceLength, 2);
-    var lastPiece = pieceLength < 32767;
+    var lastPiece = pieceLength < 65535;
     result = this.socket.write(outgoingData, encoding, lastPiece ? callback : undefined);
     if (lastPiece) break;
   }
