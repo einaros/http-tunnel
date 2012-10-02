@@ -1,0 +1,25 @@
+{
+  "name": "http-tunnel",
+  "version": "0.5.1",
+  "description": "",
+  "main": "Channel.js",
+  "dependencies": {
+    "commander": "~1.0.4",
+    "express": "~3.0.0rc4"
+  },
+  "bin": {
+    "http-tunnel": "./http-tunnel.js",
+    "http-tunnel-server": "./http-tunnel-server.js"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/einaros/http-tunnel.git"
+  },
+  "author": "Einar Otto Stangvik <einaros@gmail.com>",
+  "license": "BSD"
+}

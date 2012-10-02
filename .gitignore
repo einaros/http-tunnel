@@ -1,0 +1,9 @@
+npm-debug.log
+node_modules
+.*.swp
+.*.un~
+.lock-*
+.DS_Store
+build
+temp/
+public/
