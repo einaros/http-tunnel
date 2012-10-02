@@ -10,10 +10,6 @@ var http = require('http')
   , program = require('commander')
   , Multiplexer = require('./Multiplexer');
 
-process.on('uncaughtException', function(error) {
-  console.log('Uncaught error: ', error, error.stack);
-});
-
 program
   .option('--server [addr]', 'The server address to connect to.')
   .option('--pass [uri]', 'A password to send to the server to authorize binding [optional]')
@@ -32,18 +28,9 @@ if ((!program.serve && !program.proxy) || (program.serve && program.proxy)) {
   process.exit(-1);
 }
 
-var webserver;
-if (program.serve) {
-  webserver = express();
-  webserver.all('*', function(req, res, next) {
-    var clientAddress = req.headers['x-forwarded-for'];
-    if (clientAddress) console.log('Request from %s: %s %s', clientAddress, req.method, req.originalUrl);
-    else console.log('Request: %s %s', req.method, req.originalUrl);
-    return next();
-  });
-  if (program.directory) webserver.use(express.directory(process.cwd()));
-  webserver.use(express.static(process.cwd()));
-}
+process.on('uncaughtException', function(error) {
+  console.log('Uncaught error: ', error, error.stack);
+});
 
 function copyToClipboard(str, cb) {
   var spawn = require('child_process').spawn
@@ -84,6 +71,19 @@ function nextTick(cb) {
       cb.apply(this, args);
     });
   }).bind(this);
+}
+
+var webserver;
+if (program.serve) {
+  webserver = express();
+  webserver.all('*', function(req, res, next) {
+    var clientAddress = req.headers['x-forwarded-for'];
+    if (clientAddress) console.log('Request from %s: %s %s', clientAddress, req.method, req.originalUrl);
+    else console.log('Request: %s %s', req.method, req.originalUrl);
+    return next();
+  });
+  if (program.directory) webserver.use(express.directory(process.cwd()));
+  webserver.use(express.static(process.cwd()));
 }
 
 bindWithServer(program.server, nextTick(function(socket, host) {

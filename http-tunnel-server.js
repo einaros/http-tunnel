@@ -7,18 +7,12 @@ var http = require('http')
   , program = require('commander')
   , Multiplexer = require('./Multiplexer');
 
-process.on('uncaughtException', function(error) {
-  console.log('Uncaught error: ', error, error.stack);
-});
-
 program
   .option('--pass [pwd]', 'A password to require from clients [optional]')
   .parse(process.argv);
 
-var handlers = {};
-var server = net.createServer(processIncomingRequest);
-server.listen(4004, function() {
-  console.log('Server listening.');
+process.on('uncaughtException', function(error) {
+  console.log('Uncaught error: ', error, error.stack);
 });
 
 function processIncomingRequest(socket) {
@@ -106,3 +100,10 @@ function pipeHttpRequestToHandler(handler, req, socket) {
     channel.pipe(socket);
   });
 }
+
+var handlers = {};
+var server = net.createServer(processIncomingRequest);
+server.listen(4004, function() {
+  console.log('Server listening.');
+});
+
