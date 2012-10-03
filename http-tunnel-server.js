@@ -13,12 +13,18 @@ program
   .option('-p, --port [port]', 'The port to listen on (default: 8080)', 8080)
   .option('--pass [pwd]', 'A password to require from clients [optional]')
   .option('-r, --ratelimit [kBps]', 'Limit the server rate to the specified kilobytes per second [optional]')
+  .option('-l, --log', 'Log requests passing through the channel [optional]')
   .parse(process.argv);
 
 var logger = new (winston.Logger)({
   transports: [
-    new (winston.transports.Console)({ timestamp: true }),
-    new (winston.transports.File)({ filename: 'http-tunnel-server.log', timestamp: true })
+    new (winston.transports.Console)({ timestamp: true, colorize: true }),
+    new (winston.transports.File)({ filename: 'http-tunnel-server.log', timestamp: true, json: false })
+  ]
+});
+var requestLogger = new (winston.Logger)({
+  transports: [
+    new (winston.transports.File)({ filename: 'http-tunnel-server-requests.log', timestamp: true, json: false })
   ]
 });
 
@@ -41,7 +47,7 @@ function onHttpRequest(socket, req, res) {
   var handler = null;
   var host = req.headers['host'];
   if (host) handler = handlers[host];
-  if (handler) pipeHttpRequestToHandler(handler, req, socket);
+  if (handler) pipeHttpRequestToHandler(handler, req, socket, host);
   else {
     logger.warn('Unhandled request', { method: req.method, url: req.url, host: host });
     res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -53,7 +59,7 @@ function onHttpUpgrade(req, socket, upgradeHead) {
   var handler = null;
   var host = req.headers['host'];
   if (host) handler = handlers[host];
-  if (handler) pipeHttpRequestToHandler(handler, req, socket);
+  if (handler) pipeHttpRequestToHandler(handler, req, socket, host);
   else initializeHandler(req, socket, upgradeHead);
 }
 
@@ -102,8 +108,14 @@ function initializeHandler(req, socket, upgradeHead) {
                '\r\n');
 }
 
-function pipeHttpRequestToHandler(handler, req, socket) {
+function pipeHttpRequestToHandler(handler, req, socket, host) {
+  if (program.log) requestLogger.info(req.method, { url: req.url, host: req.host });
   handler.connect(function(error, channel) {
+    if (error) {
+      logger.error('Error while making new connection to handler.', { host: host });
+      socket.destroy();
+      return;
+    }
     var toSend = req.method + ' ' + req.url + ' HTTP/' + req.httpVersion + '\r\n';
     for (var headerName in req.headers) {
       toSend += headerName + ': ' + req.headers[headerName] + '\r\n';
