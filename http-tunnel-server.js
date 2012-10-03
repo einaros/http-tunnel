@@ -76,13 +76,13 @@ function initializeHandler(req, socket, upgradeHead) {
     return;
   }
 
-  var remoteHost = req.headers['x-forwarded-for'];
+  var forwardedFor = req.headers['x-forwarded-for'];
 
   if (program.pass &&
       (!req.headers['password'] ||
        req.headers['password'] != program.pass)) {
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-    logger.warning('Handler rejected due to invalid or missing password', { remote: remoteHost });
+    logger.warning('Handler rejected due to invalid or missing password', { remote: forwardedFor });
     return;
   }
 
@@ -94,12 +94,12 @@ function initializeHandler(req, socket, upgradeHead) {
   }
   if (!handlerId) handlerId = getRandomHostId() + '.' + host;
 
-  logger.info('Handler connected', { id: handlerId, remote: remoteHost });
+  logger.info('Handler connected', { id: handlerId, remote: forwardedFor });
   if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
   handlers[handlerId] = new Multiplexer(socket);
   socket.on('end', function() {
     handlers[handlerId] = null;
-    logger.info('Handler disconnected', { id: handlerId, remote: remoteHost });
+    logger.info('Handler disconnected', { id: handlerId, remote: forwardedFor });
   });
   socket.write('HTTP/1.1 101 You are aweome!\r\n' +
                'Connection: Upgrade\r\n' +
@@ -109,7 +109,18 @@ function initializeHandler(req, socket, upgradeHead) {
 }
 
 function pipeHttpRequestToHandler(handler, req, socket, host) {
-  if (program.log) requestLogger.info(req.method, { url: req.url, host: req.host });
+  // forward client ip
+  var forwardedFor = req.headers['x-forwarded-for'];
+  if (forwardedFor) socket.forwardedFor = forwardedFor;
+  else if (socket.forwardedFor) {
+    forwardedFor = socket.forwardedFor;
+    req.headers['x-forwarded-for'] = forwardedFor;
+  }
+
+  // log request, if requested
+  if (program.log) requestLogger.info(req.method, { url: req.url, host: host, remote: forwardedFor });
+
+  // pipe the connection through
   handler.connect(function(error, channel) {
     if (error) {
       logger.error('Error while making new connection to handler.', { host: host });
