@@ -41,22 +41,32 @@
 
 <h2>Install and usage</h2>
 
-<pre><code>$ npm install -g http-tunnel
-$ mkdir somefolder
+<h3>Install? Easy!</h3>
+
+<p><code>$ npm install -g http-tunnel</code></p>
+
+<h3>Share a folder as a website?</h3>
+
+<pre><code>$ mkdir somefolder
 $ cd somefolder
 $ echo hi &gt; file.txt
 $ http-tunnel --server pub.2x.io -d -s
 </code></pre>
 
-<p>This will create a tunnel through a custom url, such as <code>http://somehost.pub.2x.io</code> and serve the content of the <code>somefolder</code> directory (the <code>-s</code> argument), along with a directory index (<code>-d</code>).</p>
+<p>This will create a tunnel through a public url, such as <code>http://foofy.pub.2x.io</code> and serve the content of the <code>somefolder</code> directory (the <code>-s</code> argument), along with a directory index (<code>-d</code>).</p>
 
-<p>To serve a local port, rather than the current directory, try the <code>-p [port]</code> argument.</p>
+<p>And if you want to use a custom hostname, try <code>-i foobar</code>, or anything else to your liking. That would e.g. result in <code>http://foobar.pub.2x.io</code>. If the name is currently available, it'll be serving you.</p>
 
-<p>And if you want to use a custom hostname, try <code>-i foobar</code>, or anything else to your liking. If the name is currently available, that'll be serving you.</p>
+<h3>To serve a locally running web application?</h3>
 
-<h3>Note</h3>
+<pre><code>$ http-tunnel --server pub.2x.io -p 8080
+</code></pre>
 
-<p>The demonstration server, <code>pub.2x.io</code> is at the moment rate limited. Should you wish a higher bandwidth permanent solution, get in touch with me for pointers.</p>
+<p>This will create a tunnel through a public url, such as <code>http://foofy.pub.2x.io</code> and proxy requests to and from port 8080 (the <code>-p</code> argument).</p>
+
+<h2>Note</h2>
+
+<p>The demonstration server, <code>pub.2x.io</code>, is at the moment rate limited. Should you wish a higher bandwidth permanent solution, get in touch with me for pointers.</p>
 
 <h2>Hosting on a custom server</h2>
 
