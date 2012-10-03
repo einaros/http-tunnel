@@ -91,7 +91,7 @@ bindWithServer(program.server, nextTick(function(socket, host) {
   if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
 
   copyToClipboard(host);
-  console.log('Bound at address: ' + host);
+  console.log('Bound at URI: http://%s', host);
   delete socket._httpMessage; // not properly cleaned up after UPGRADE/Connect
   var mpx = new Multiplexer(socket);
   mpx.listen(function(error, channel) {
