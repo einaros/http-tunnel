@@ -17,6 +17,7 @@ program
   .option('-d, --directory', 'Enable directory browsing (used with -s)')
   .option('-p, --proxy [port]', 'Proxy connections to port')
   .option('-i, --id [id]', 'The preferred id to request the server to bind to [optional]')
+  .option('-r, --ratelimit [kBps]', 'Limit the server rate to the specified kilobytes per second [optional]')
   .parse(process.argv);
 
 if (!program.server) {
@@ -87,6 +88,8 @@ if (program.serve) {
 }
 
 bindWithServer(program.server, nextTick(function(socket, host) {
+  if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
+
   copyToClipboard(host);
   console.log('Bound at address: ' + host);
   delete socket._httpMessage; // not properly cleaned up after UPGRADE/Connect
