@@ -1,38 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>http-tunnel by einaros</title>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="http-tunnel : node.js web tunnel - to share the localhost stuff you're working on no matter where you are" />
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>http-tunnel</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/einaros/http-tunnel">View on GitHub</a>
+
+          <h1 id="project_title">http-tunnel</h1>
+          <h2 id="project_tagline">node.js web tunnel - to share the localhost stuff you're working on no matter where you are</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/einaros/http-tunnel/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/einaros/http-tunnel/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
         <h1>http-tunnel</h1>
-        <p>node.js web tunnel - to share the localhost stuff you're working on no matter where you are</p>
 
-        <p class="view"><a href="https://github.com/einaros/http-tunnel">View the Project on GitHub <small>einaros/http-tunnel</small></a></p>
+<p>If you are on the road, behind fifteen firewalls, and want to share some web application you're developing locally, or just share a set of files with someone real quick; this tool will do the job!</p>
 
-
-        <ul>
-          <li><a href="https://github.com/einaros/http-tunnel/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/einaros/http-tunnel/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/einaros/http-tunnel">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <h1>http-tunnel</h1>
-
-<p>If you are on the road, behind fifteen firewalls, and want to share some web applicatino you're developing locally, or just share a set of files with someone real quick; this tool will do the job!</p>
-
-<p><code>http-tunnel</code> is capable of either forwarding incoming connections to a locally running webapp, or serve the current working directory (with an optional directory listing as well, if you don't have an index file) through an adhoc express instance.</p>
+<p><code>http-tunnel</code> will either forwarding incoming connections to a locally running webapp, or serve the current working directory (with an optional directory listing as well, if you don't have an index file) through an adhoc express instance.</p>
 
 <p>And yes, it supports WebSockets.</p>
 
@@ -59,12 +62,17 @@ $ http-tunnel --server pub.2x.io -d -s
 
 <p>This can be hosted on any server, but really ought to be one with a wildcard dns pointed to it. In case of the testserver above, it is running HAProxy with an SSL terminator in front. If you're curious about the HAProxy config, leave an issue or drop me an email.</p>
       </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/einaros">einaros</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">http-tunnel maintained by <a href="https://github.com/einaros">einaros</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
-    <script src="javascripts/scale.fix.js"></script>
+
     
+
   </body>
 </html>
