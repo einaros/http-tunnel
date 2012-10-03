@@ -9,6 +9,7 @@ var http = require('http')
 
 program
   .option('--pass [pwd]', 'A password to require from clients [optional]')
+  .option('-r, --ratelimit [kBps]', 'Limit the server rate to the specified kilobytes per second [optional]')
   .parse(process.argv);
 
 process.on('uncaughtException', function(error) {
@@ -76,6 +77,7 @@ function initializeHandler(req, socket, upgradeHead) {
   if (!handlerId) handlerId = getRandomHostId() + '.' + host;
 
   console.log('Handler connected: %s', handlerId);
+  if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
   handlers[handlerId] = new Multiplexer(socket);
   socket.on('end', function() {
     handlers[handlerId] = null;
