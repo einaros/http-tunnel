@@ -1,12 +1,13 @@
 {
   "name": "http-tunnel",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "",
   "main": "Channel.js",
   "dependencies": {
     "commander": "~1.0.4",
     "express": "~3.0.0rc4",
-    "ratelimit": "0.0.4"
+    "ratelimit": "0.0.4",
+    "winston": "~0.6.2"
   },
   "bin": {
     "http-tunnel": "./http-tunnel.js",

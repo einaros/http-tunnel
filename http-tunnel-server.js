@@ -5,15 +5,25 @@ var http = require('http')
   , net = require('net')
   , util = require('util')
   , program = require('commander')
+  , winston = require('winston')
   , Multiplexer = require('./Multiplexer');
 
 program
+  .option('-i, --ip [ip]', 'The port to listen on (default: 0.0.0.0)', '0.0.0.0')
+  .option('-p, --port [port]', 'The port to listen on (default: 8080)', 8080)
   .option('--pass [pwd]', 'A password to require from clients [optional]')
   .option('-r, --ratelimit [kBps]', 'Limit the server rate to the specified kilobytes per second [optional]')
   .parse(process.argv);
 
+var logger = new (winston.Logger)({
+  transports: [
+    new (winston.transports.Console)({ timestamp: true }),
+    new (winston.transports.File)({ filename: 'http-tunnel-server.log', timestamp: true })
+  ]
+});
+
 process.on('uncaughtException', function(error) {
-  console.log('Uncaught error: ', error, error.stack);
+  logger.error('Uncaught error', { info: error, stack: error.stack });
 });
 
 function processIncomingRequest(socket) {
@@ -33,8 +43,8 @@ function onHttpRequest(socket, req, res) {
   if (host) handler = handlers[host];
   if (handler) pipeHttpRequestToHandler(handler, req, socket);
   else {
-    console.log('Unhandled request: %s %s %s', req.method, req.url, host);
-    res.writeHead(404, {'Content-Type': 'text/plain'});
+    logger.warning('Unhandled request', { method: req.method, url: req.url, host: host });
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('');
   }
 }
@@ -60,11 +70,13 @@ function initializeHandler(req, socket, upgradeHead) {
     return;
   }
 
+  var remoteHost = req.headers['x-forwarded-for'];
+
   if (program.pass &&
       (!req.headers['password'] ||
        req.headers['password'] != program.pass)) {
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-    console.log('Handler rejected due to invalid or missing password.');
+    logger.warning('Handler rejected due to invalid or missing password', { remote: remoteHost });
     return;
   }
 
@@ -76,12 +88,12 @@ function initializeHandler(req, socket, upgradeHead) {
   }
   if (!handlerId) handlerId = getRandomHostId() + '.' + host;
 
-  console.log('Handler connected: %s', handlerId);
+  logger.info('Handler connected', { id: handlerId, remote: remoteHost });
   if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
   handlers[handlerId] = new Multiplexer(socket);
   socket.on('end', function() {
     handlers[handlerId] = null;
-    console.log('Handler disconnected: %s', handlerId);
+    logger.info('Handler disconnected', { id: handlerId, remote: remoteHost });
   });
   socket.write('HTTP/1.1 101 You are aweome!\r\n' +
                'Connection: Upgrade\r\n' +
@@ -105,7 +117,7 @@ function pipeHttpRequestToHandler(handler, req, socket) {
 
 var handlers = {};
 var server = net.createServer(processIncomingRequest);
-server.listen(4004, function() {
-  console.log('Server listening.');
+server.listen(program.port, program.ip, function() {
+  logger.info('Server listening', { ip: program.ip, port: program.port });
 });
 
