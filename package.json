@@ -10,8 +10,8 @@
     "winston": "~0.6.2"
   },
   "bin": {
-    "http-tunnel": "./http-tunnel.js",
-    "http-tunnel-server": "./http-tunnel-server.js"
+    "http-tunnel": "./bin/http-tunnel.js",
+    "http-tunnel-server": "./bin/http-tunnel-server.js"
   },
   "devDependencies": {},
   "scripts": {

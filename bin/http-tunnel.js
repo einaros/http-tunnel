@@ -8,7 +8,7 @@ var http = require('http')
   , util = require('util')
   , path = require('path')
   , program = require('commander')
-  , Multiplexer = require('./Multiplexer');
+  , Multiplexer = require('./lib/Multiplexer');
 
 program
   .option('--server [addr]', 'The server address to connect to.')
