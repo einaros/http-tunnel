@@ -6,6 +6,10 @@ If you are on the road, behind fifteen firewalls, and want to share some webapp 
 
 It is capable of either forwarding incoming connections to a locally running webapp, or serve the current working directory (with an optional directory listing as well, if you don't have an index file).
 
+## Installation
+
+`npm install http-tunnel`
+
 ## Testing through public server
 
 `./http-tunnel.js --server pub.2x.io -d -s`
