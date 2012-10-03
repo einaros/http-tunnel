@@ -43,7 +43,7 @@ function onHttpRequest(socket, req, res) {
   if (host) handler = handlers[host];
   if (handler) pipeHttpRequestToHandler(handler, req, socket);
   else {
-    logger.warning('Unhandled request', { method: req.method, url: req.url, host: host });
+    logger.warn('Unhandled request', { method: req.method, url: req.url, host: host });
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('');
   }

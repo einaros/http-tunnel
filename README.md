@@ -12,11 +12,11 @@ It is capable of either forwarding incoming connections to a locally running web
 
 ## Testing through public server
 
-`http-tunnel.js --server pub.2x.io -d -s`
+`http-tunnel --server pub.2x.io -d -s`
 
 This will serve the current directory (the -s argument), along with a directory index (the -d argument).
 
-`http-tunnel.js --server pub.2x.io -d -s -i myhost`
+`http-tunnel --server pub.2x.io -d -s -i myhost`
 
 This will serve the current directory (the -s argument), along with a directory index (the -d argument), and also attempt to host it at the myhost prefix. In case of the example, that would be myhost.pub.2x.io, should that be currently available.
 
