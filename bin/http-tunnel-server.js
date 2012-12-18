@@ -6,7 +6,7 @@ var http = require('http')
   , util = require('util')
   , program = require('commander')
   , winston = require('winston')
-  , Multiplexer = require('./lib/Multiplexer');
+  , Multiplexer = require('../lib/Multiplexer');
 
 program
   .option('-i, --ip [ip]', 'The port to listen on (default: 0.0.0.0)', '0.0.0.0')
