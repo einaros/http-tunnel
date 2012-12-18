@@ -1,25 +1,42 @@
-# http-tunnel
+## In brief
 
-Initializes a tunnel to a local webserver through a public hosted server.
+If you are on the road, behind fifteen firewalls, and want to share some web application you're developing locally, or just share a set of files with someone real quick; this tool will do the job!
 
-If you are on the road, behind fifteen firewalls, and want to share some webapp you're developing locally, or just share a set of files with someone quickly, this tool will do the job.
+`http-tunnel` will either forwarding incoming connections to a locally running webapp, or serve the current working directory (with an optional directory listing as well, if you don't have an index file) through an adhoc express instance.
 
-It is capable of either forwarding incoming connections to a locally running webapp, or serve the current working directory (with an optional directory listing as well, if you don't have an index file).
+And yes, it supports WebSockets.
 
-## Installation
+## Installation and usage
 
-`npm install -g http-tunnel`
+### Install? Easy!
 
-## Testing through public server
+`$ npm install -g http-tunnel`
 
-`http-tunnel --server pub.2x.io -d -s`
+### Share a folder as a website?
 
-This will serve the current directory (the -s argument), along with a directory index (the -d argument).
+```
+$ mkdir somefolder
+$ cd somefolder
+$ echo hi > file.txt
+$ http-tunnel --server pub.2x.io -d -s
+```
 
-`http-tunnel --server pub.2x.io -d -s -i myhost`
+This will create a tunnel through a public url, such as `http://foofy.pub.2x.io` and serve the content of the `somefolder` directory (the `-s` argument), along with a directory index (`-d`).
 
-This will serve the current directory (the -s argument), along with a directory index (the -d argument), and also attempt to host it at the myhost prefix. In case of the example, that would be myhost.pub.2x.io, should that be currently available.
+And if you want to use a custom hostname, try `-i foobar`, or anything else to your liking. That would e.g. result in `http://foobar.pub.2x.io`. If the name is currently available, it'll be serving you.
 
-## Custom server
+### To serve a locally running web application?
+
+```
+$ http-tunnel --server pub.2x.io -p 8080
+```
+
+This will create a tunnel through a public url, such as `http://foofy.pub.2x.io` and proxy requests to and from port 8080 (the `-p` argument).
+
+## Note
+
+The demonstration server, `pub.2x.io`, is at the moment rate limited. Should you wish a higher bandwidth permanent solution, get in touch with me for pointers.
+
+## Hosting on a custom server
 
 This can be hosted on any server, but really ought to be one with a wildcard dns pointed to it. In case of the testserver above, it is running HAProxy with an SSL terminator in front. If you're curious about the HAProxy config, leave an issue or drop me an email.
