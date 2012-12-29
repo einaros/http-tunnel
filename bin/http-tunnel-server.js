@@ -97,10 +97,15 @@ function initializeHandler(req, socket, upgradeHead) {
   logger.info('Handler connected', { id: handlerId, remote: forwardedFor });
   if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
   handlers[handlerId] = new Multiplexer(socket);
-  socket.on('end', function() {
+
+  function onSocketClose() {
+    if (!handlers[handlerId]) return;
     handlers[handlerId] = null;
     logger.info('Handler disconnected', { id: handlerId, remote: forwardedFor });
-  });
+  }
+
+  socket.on('end', onSocketClose);
+  socket.on('close', onSocketClose);
   socket.write('HTTP/1.1 101 You are aweome!\r\n' +
                'Connection: Upgrade\r\n' +
                'Upgrade: http-tunnel\r\n' +
