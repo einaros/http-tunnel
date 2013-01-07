@@ -67,7 +67,8 @@ function bindWithServer(host, callback) {
     headers: {
       'Connection': 'Upgrade',
       'Upgrade': 'http-tunnel'
-    }
+    },
+    rejectUnauthorized: false
   };
   if (program.id) options.headers['preferredid'] = program.id;
   if (program.pass) options.headers['password'] = program.pass;
