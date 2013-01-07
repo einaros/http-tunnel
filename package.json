@@ -1,6 +1,6 @@
 {
   "name": "http-tunnel",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "description": "",
   "main": "Channel.js",
   "dependencies": {
