@@ -28,7 +28,7 @@ And if you want to use a custom hostname, try `-i foobar`, or anything else to y
 ### To serve a locally running web application?
 
 ```
-$ http-tunnel --server pub.2x.io -p 8080
+$ http-tunnel --server pub.2x.io -p localhost:8080
 ```
 
 This will create a tunnel through a public url, such as `http://foofy.pub.2x.io` and proxy requests to and from port 8080 (the `-p` argument).
