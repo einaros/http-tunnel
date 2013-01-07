@@ -8,17 +8,26 @@ var http = require('http')
   , util = require('util')
   , path = require('path')
   , program = require('commander')
+  , winston = require('winston')
   , Multiplexer = require('../lib/Multiplexer');
 
 program
   .option('--server [addr]', 'The server address to connect to.')
-  .option('--pass [uri]', 'A password to send to the server to authorize binding [optional]')
-  .option('-s, --serve', 'Serve the current path')
+  .option('--pass [password]', 'A password to send to the server to authorize binding [optional]')
+  .option('--no-ssl', 'Don\'t use ssl for http-tunnel-server connection.')
+  .option('-s, --serve', 'Serve the current path.')
   .option('-d, --directory', 'Enable directory browsing (used with -s)')
-  .option('-p, --proxy [port]', 'Proxy connections to port')
+  .option('-p, --proxy [[address:]port]', 'Proxy connections to port')
   .option('-i, --id [id]', 'The preferred id to request the server to bind to [optional]')
   .option('-r, --ratelimit [kBps]', 'Limit the server rate to the specified kilobytes per second [optional]')
   .parse(process.argv);
+
+var logger = new (winston.Logger)({
+  transports: [
+    new (winston.transports.Console)({ timestamp: true, colorize: true }),
+    new (winston.transports.File)({ filename: 'http-tunnel.log', timestamp: true, json: false })
+  ]
+});
 
 if (!program.server) {
   console.log('Provide a server address to --server. Try --help.');
@@ -28,9 +37,11 @@ if ((!program.serve && !program.proxy) || (program.serve && program.proxy)) {
   console.log('Provide either -s/--serve or -p/--proxy. Try --help.');
   process.exit(-1);
 }
+var useSSL = true;
+if (program.ssl == false) useSSL = false;
 
 process.on('uncaughtException', function(error) {
-  console.log('Uncaught error: ', error, error.stack);
+  logger.error('Uncaught error', { info: error, stack: error.stack });
 });
 
 function copyToClipboard(str, cb) {
@@ -44,8 +55,14 @@ function copyToClipboard(str, cb) {
 }
 
 function bindWithServer(host, callback) {
+  var port = useSSL ? 443 : 80;
+  if (host.indexOf(':')) {
+    var hostParts = host.split(':');
+    host = hostParts[0];
+    port = hostParts[1];
+  }
   var options = {
-    port: 443,
+    port: port,
     host: host,
     headers: {
       'Connection': 'Upgrade',
@@ -54,12 +71,12 @@ function bindWithServer(host, callback) {
   };
   if (program.id) options.headers['preferredid'] = program.id;
   if (program.pass) options.headers['password'] = program.pass;
-  var req = https.request(options);
+  var req = (useSSL ? https : http).request(options);
   req.on('upgrade', function(res, socket, upgradeHead) {
     callback(socket, res.headers['host']);
   });
   req.on('response', function(res) {
-    console.log('Connection failed: HTTP %s', res.statusCode);
+    logger.info('Connection failed: HTTP ' + res.statusCode);
     process.exit(-1);
   })
   req.end();
@@ -79,8 +96,8 @@ if (program.serve) {
   webserver = express();
   webserver.all('*', function(req, res, next) {
     var clientAddress = req.headers['x-forwarded-for'];
-    if (clientAddress) console.log('Request from %s: %s %s', clientAddress, req.method, req.originalUrl);
-    else console.log('Request: %s %s', req.method, req.originalUrl);
+    if (clientAddress) logger.info(util.format('Request from %s: %s %s', clientAddress, req.method, req.originalUrl));
+    else logger.info(util.format('Request: %s %s', req.method, req.originalUrl));
     return next();
   });
   if (program.directory) webserver.use(express.directory(process.cwd()));
@@ -89,21 +106,42 @@ if (program.serve) {
 
 bindWithServer(program.server, nextTick(function(socket, host) {
   if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
-
   copyToClipboard('http://' + host);
-  console.log('Bound at URI: http://%s', host);
+  logger.info(util.format('Bound at URI: http://%s', host));
   delete socket._httpMessage; // not properly cleaned up after UPGRADE/Connect
   var mpx = new Multiplexer(socket);
   mpx.listen(function(error, channel) {
     if (program.proxy) {
+      var proxyHost = 'localhost';
+      var proxyPort = program.proxy;
+      if (program.proxy.indexOf(':')) {
+        var hostParts = program.proxy.split(':');
+        proxyHost = hostParts[0];
+        proxyPort = hostParts[1];
+      }
+      logger.info(util.format('Proxying incoming request to %s:%s', proxyHost, proxyPort));
       channel.pause();
-      var proxy = net.connect({port: program.proxy}, function() {
+      var proxy = net.connect({host: proxyHost, port: proxyPort}, function() {
         channel.pipe(proxy);
         proxy.pipe(channel);
         channel.resume();
       });
+      proxy.on('error', function(error) {
+        logger.error('Error connecting to proxy host.', { info: error, stack: error.stack });
+        try {
+          handlerChannel.end();
+        }
+        catch (e) {
+          // might already be closed, so ignore the error
+        }
+      });
       proxy.on('end', function() {
-        channel.end();
+        try {
+          handlerChannel.end();
+        }
+        catch (e) {
+          // might already be closed, so ignore the error
+        }
       });
       channel.on('end', function() {
         proxy.end();

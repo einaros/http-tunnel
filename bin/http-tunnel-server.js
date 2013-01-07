@@ -6,6 +6,7 @@ var http = require('http')
   , util = require('util')
   , program = require('commander')
   , winston = require('winston')
+  , ChannelRequest = require('../lib/ChannelRequest')
   , Multiplexer = require('../lib/Multiplexer');
 
 program
@@ -113,34 +114,59 @@ function initializeHandler(req, socket, upgradeHead) {
                '\r\n');
 }
 
-function pipeHttpRequestToHandler(handler, req, socket, host) {
+function pipeHttpRequestToHandler(handler, req, clientSocket, host) {
   // forward client ip
   var forwardedFor = req.headers['x-forwarded-for'];
-  if (forwardedFor) socket.forwardedFor = forwardedFor;
-  else if (socket.forwardedFor) {
-    forwardedFor = socket.forwardedFor;
+  if (forwardedFor) clientSocket.forwardedFor = forwardedFor;
+  else if (clientSocket.forwardedFor) {
+    forwardedFor = clientSocket.forwardedFor;
     req.headers['x-forwarded-for'] = forwardedFor;
   }
 
   // log request, if requested
   if (program.log) requestLogger.info(req.method, { url: req.url, host: host, remote: forwardedFor });
 
-  // pipe the connection through
-  handler.connect(function(error, channel) {
-    if (error) {
-      logger.error('Error while making new connection to handler.', { host: host });
-      socket.destroy();
-      return;
-    }
+  function sendRequestToHandler(handlerChannel) {
+    // reuse channel
     var toSend = req.method + ' ' + req.url + ' HTTP/' + req.httpVersion + '\r\n';
     for (var headerName in req.headers) {
       toSend += headerName + ': ' + req.headers[headerName] + '\r\n';
     }
     toSend += '\r\n';
-    channel.write(toSend);
-    req.pipe(channel);
-    channel.pipe(socket);
-  });
+    handlerChannel.write(toSend);
+    req.pipe(new ChannelRequest(handlerChannel)); // pipe request from client to handler
+  }
+
+  if (clientSocket._handlerChannel) {
+    var handlerChannel = clientSocket._handlerChannel;
+    sendRequestToHandler(handlerChannel);
+  }
+  else {
+    // pipe the connection through
+    handler.connect(function(error, handlerChannel) {
+      if (error) {
+        logger.error('Error while making new connection to handler.', { host: host });
+        clientSocket.destroy();
+        return;
+      }
+      // Ensure that the handler channel and client socket mutually end
+      handlerChannel.on('end', function() {
+        clientSocket._handlerChannel = null;
+        clientSocket.end();
+      });
+      clientSocket.on('end', function() {
+        try {
+          handlerChannel.end();
+        }
+        catch (e) {
+          // might already be closed, so ignore the error
+        }
+      });
+      clientSocket._handlerChannel = handlerChannel;
+      handlerChannel.pipe(clientSocket); // pipe data from handler to client
+      sendRequestToHandler(handlerChannel);
+    });
+  }
 }
 
 var handlers = {};
