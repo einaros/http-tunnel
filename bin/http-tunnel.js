@@ -104,10 +104,11 @@ if (program.serve) {
   webserver.use(express.static(process.cwd()));
 }
 
-bindWithServer(program.server, nextTick(function(socket, host) {
+bindWithServer(program.server, nextTick(function(socket, address) {
   if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
-  copyToClipboard('https://' + host);
-  logger.info(util.format('Secure connection established with server. Bound at URI: https://%s', host));
+  copyToClipboard(address);
+  logger.info('Secure connection established with tunnel server.');
+  logger.info(util.format('Serving content through: %s', address));
   delete socket._httpMessage; // not properly cleaned up after UPGRADE/Connect in node.js core
   var mpx = new Multiplexer(socket);
   mpx.listen(function(error, channel) {

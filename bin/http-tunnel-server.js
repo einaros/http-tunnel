@@ -13,6 +13,7 @@ program
   .option('-i, --ip [ip]', 'The port to listen on (default: 0.0.0.0)', '0.0.0.0')
   .option('-p, --port [port]', 'The port to listen on (default: 8080)', 8080)
   .option('-d, --domain [address]', 'The domain to bind clients to. E.g. "foo.com" will cause clients to bind to "clientid.foo.com"')
+  .option('--securable', 'Indicate to clients that they can serve secure content (e.g. https://clientid.foo.com)')
   .option('--pass [pwd]', 'A password to require from clients [optional]')
   .option('-r, --ratelimit [kBps]', 'Limit the server rate to the specified kilobytes per second [optional]')
   .option('-l, --log', 'Log requests passing through the channel [optional]')
@@ -109,7 +110,7 @@ function initializeHandler(req, socket, upgradeHead) {
   socket.write('HTTP/1.1 101 You are aweome!\r\n' +
                'Connection: Upgrade\r\n' +
                'Upgrade: http-tunnel\r\n' +
-               'Host: ' + handlerId + '\r\n' +
+               'Host: ' + (program.securable ? 'https://' : 'http://') + handlerId + '\r\n' +
                '\r\n');
 }
 
