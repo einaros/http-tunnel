@@ -12,10 +12,16 @@ var http = require('http')
 program
   .option('-i, --ip [ip]', 'The port to listen on (default: 0.0.0.0)', '0.0.0.0')
   .option('-p, --port [port]', 'The port to listen on (default: 8080)', 8080)
+  .option('-d, --domain [address]', 'The domain to bind clients to. E.g. "foo.com" will cause clients to bind to "clientid.foo.com"')
   .option('--pass [pwd]', 'A password to require from clients [optional]')
   .option('-r, --ratelimit [kBps]', 'Limit the server rate to the specified kilobytes per second [optional]')
   .option('-l, --log', 'Log requests passing through the channel [optional]')
   .parse(process.argv);
+
+if (!program.domain) {
+  console.log('Provide a domain with -d/--domain. Try --help.');
+  process.exit(-1);
+}
 
 var logger = new (winston.Logger)({
   transports: [
@@ -71,12 +77,6 @@ function initializeHandler(req, socket, upgradeHead) {
     return;
   }
 
-  var host = req.headers['host'];
-  if (!host) {
-    socket.write('HTTP/1.1 400 Bad Request\r\n\r\n');
-    return;
-  }
-
   var forwardedFor = req.headers['x-forwarded-for'];
 
   if (program.pass &&
@@ -89,11 +89,10 @@ function initializeHandler(req, socket, upgradeHead) {
 
   var handlerId;
   if (req.headers['preferredid']) {
-    var preferredId = req.headers['preferredid'].replace(/[^A-z0-9\-.]/g, '');
-    var tempId = preferredId + '.' + host;
-    if (!handlers[tempId]) handlerId = tempId;
+    var preferredId = req.headers['preferredid'].replace(/[^A-z0-9\-.]/g, '') + '.' + program.domain;
+    if (!handlers[preferredId]) handlerId = preferredId;
   }
-  if (!handlerId) handlerId = getRandomHostId() + '.' + host;
+  if (!handlerId) handlerId = getRandomHostId() + '.' + program.domain;
 
   logger.info('Handler connected', { id: handlerId, remote: forwardedFor });
   if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
