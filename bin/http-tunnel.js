@@ -131,13 +131,14 @@ bindWithServer(program.server, nextTick(function(socket, host) {
         try {
           handlerChannel.end();
         }
-        catch (e) {/* ignore */ } });
+        catch (e) {/* ignore */ }
       });
       proxy.on('end', function() {
         try {
           handlerChannel.end();
         }
-        catch (e) {/* ignore */ } });
+        catch (e) {/* ignore */ }
+      });
       channel.on('end', function() {
         proxy.end();
       });
