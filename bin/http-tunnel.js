@@ -24,8 +24,7 @@ program
 
 var logger = new (winston.Logger)({
   transports: [
-    new (winston.transports.Console)({ timestamp: true, colorize: true }),
-    new (winston.transports.File)({ filename: 'http-tunnel.log', timestamp: true, json: false })
+    new (winston.transports.Console)({ timestamp: true, colorize: true })
   ]
 });
 
@@ -56,7 +55,7 @@ function copyToClipboard(str, cb) {
 
 function bindWithServer(host, callback) {
   var port = useSSL ? 443 : 80;
-  if (host.indexOf(':')) {
+  if (host.indexOf(':') != -1) {
     var hostParts = host.split(':');
     host = hostParts[0];
     port = hostParts[1];
@@ -68,7 +67,7 @@ function bindWithServer(host, callback) {
       'Connection': 'Upgrade',
       'Upgrade': 'http-tunnel'
     },
-    rejectUnauthorized: false
+    rejectUnauthorized: true
   };
   if (program.id) options.headers['preferredid'] = program.id;
   if (program.pass) options.headers['password'] = program.pass;
@@ -77,7 +76,7 @@ function bindWithServer(host, callback) {
     callback(socket, res.headers['host']);
   });
   req.on('response', function(res) {
-    logger.info('Connection failed: HTTP ' + res.statusCode);
+    logger.error('Connection failed: HTTP ' + res.statusCode);
     process.exit(-1);
   })
   req.end();
@@ -107,15 +106,15 @@ if (program.serve) {
 
 bindWithServer(program.server, nextTick(function(socket, host) {
   if (program.ratelimit) require('ratelimit')(socket, program.ratelimit * 1024, true);
-  copyToClipboard('http://' + host);
-  logger.info(util.format('Bound at URI: http://%s', host));
-  delete socket._httpMessage; // not properly cleaned up after UPGRADE/Connect
+  copyToClipboard('https://' + host);
+  logger.info(util.format('Secure connection established with server. Bound at URI: https://%s', host));
+  delete socket._httpMessage; // not properly cleaned up after UPGRADE/Connect in node.js core
   var mpx = new Multiplexer(socket);
   mpx.listen(function(error, channel) {
     if (program.proxy) {
-      var proxyHost = 'localhost';
+      var proxyHost = '127.0.0.1';
       var proxyPort = program.proxy;
-      if (program.proxy.indexOf(':')) {
+      if (program.proxy.indexOf(':') != -1) {
         var hostParts = program.proxy.split(':');
         proxyHost = hostParts[0];
         proxyPort = hostParts[1];
@@ -132,18 +131,13 @@ bindWithServer(program.server, nextTick(function(socket, host) {
         try {
           handlerChannel.end();
         }
-        catch (e) {
-          // might already be closed, so ignore the error
-        }
+        catch (e) {/* ignore */ } });
       });
       proxy.on('end', function() {
         try {
           handlerChannel.end();
         }
-        catch (e) {
-          // might already be closed, so ignore the error
-        }
-      });
+        catch (e) {/* ignore */ } });
       channel.on('end', function() {
         proxy.end();
       });
