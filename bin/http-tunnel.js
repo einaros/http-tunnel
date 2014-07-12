@@ -43,14 +43,25 @@ process.on('uncaughtException', function(error) {
   logger.error('Uncaught error', { info: error, stack: error.stack });
 });
 
-function copyToClipboard(str, cb) {
-  var spawn = require('child_process').spawn
-    , pbcopy = spawn('pbcopy');
-  pbcopy.on('exit', function (code) {
-    if (cb) cb(code == 0);
-  });
-  pbcopy.stdin.write(str + '\n');
-  pbcopy.stdin.end();
+var subprocessClipboard = function(process_name) {
+  return function(str, cb) {
+    var spawn = require('child_process').spawn
+      , clipboard = spawn(process_name);
+    clipboard.on('exit', function (code) {
+      if (cb) cb(code == 0);
+    });
+    clipboard.stdin.write(str + '\n');
+    clipboard.stdin.end();
+  }
+}
+
+var copyToClipboard;
+if (process.platform === 'win32') {
+  copyToClipboard = subprocessClipboard('clip');
+} else if (process.platform === 'darwin') {
+  copyToClipboard = subprocessClipboard('pbcopy');
+} else {
+  copyToClipboard = function(/*str, cb*/){};
 }
 
 function bindWithServer(host, callback) {
