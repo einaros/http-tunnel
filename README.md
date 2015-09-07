@@ -2,7 +2,7 @@
 
 If you are on the road, behind fifteen firewalls, and want to share some web application you're developing locally, or just share a set of files with someone real quick; this tool will do the job!
 
-`http-tunnel` will either forwarding incoming connections to a locally running webapp, or serve the current working directory (with an optional directory listing as well, if you don't have an index file) through an adhoc express instance.
+`http-tunnel` will either forward incoming connections to a locally running webapp, or serve the current working directory (with an optional directory listing as well, if you don't have an index file) through an ad hoc express instance.
 
 And yes, it supports WebSockets.
 
